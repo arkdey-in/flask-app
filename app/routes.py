@@ -63,10 +63,11 @@ main = Blueprint("main", __name__)
 
 from flask import *
 import boto3
-from app.templates.config import *
+# from app.templates.config import *
 from botocore.exceptions import ClientError
 import pymysql
-from app.templates.config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
+# from app.templates.config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
+from config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
 import pymysql.cursors
 import pymysql.err
 
@@ -79,12 +80,10 @@ s3 = boto3.client(
 )
 
 def upload_file_to_s3(file, bucket_name, acl="public-read"):
-    """
-    Uploads a file to S3 and returns the URL
-    """
     try:
+        # The file parameter should be the file object, not a path
         s3.upload_fileobj(
-            file,
+            file,  # This should be the file object, not a path
             bucket_name,
             file.filename,
             ExtraArgs={
@@ -92,7 +91,6 @@ def upload_file_to_s3(file, bucket_name, acl="public-read"):
                 "ContentType": file.content_type
             }
         )
-        
         # Generate the URL
         url = f"https://{bucket_name}.s3.{AWS_REGION}.amazonaws.com/{file.filename}"
         return url
@@ -119,7 +117,7 @@ def get_db_connection():
         password=DB_PASSWORD,
         database=DB_NAME,
         cursorclass=pymysql.cursors.DictCursor,
-        ssl={'ca': '/path/to/ssl-cert.pem'}  # If using SSL
+        # ssl={'ca': '/path/to/ssl-cert.pem'}  # If using SSL
     )
 
 # ---------------------------------------------------------------------
