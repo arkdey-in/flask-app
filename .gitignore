@@ -26,3 +26,4 @@ instance/
 .env.local
 .env.prod
 note.txt
+.env

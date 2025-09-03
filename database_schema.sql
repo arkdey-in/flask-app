@@ -79,20 +79,10 @@ CREATE TABLE IF NOT EXISTS subadmin (
     FOREIGN KEY (role_id) REFERENCES subadminroles(r_id)
 );
 
--- Super Admin Activities Table
-CREATE TABLE IF NOT EXISTS super_admin_activities (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    superadmin_id INT NOT NULL,
-    superadmin_name VARCHAR(100) NOT NULL,
-    superadmin_ip VARCHAR(45),
-    event_type VARCHAR(50) NOT NULL,
-    model VARCHAR(100) NOT NULL,
-    value TEXT,
-    event_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (superadmin_id) REFERENCES superadmin(superadmin_id)
-);
-
--- Admin Activities Table
+-- Deprecated: Admin Activities Table
+-- Note: This table is no longer used by the new `log_user_activity` function.
+-- I recommend migrating all data from this table and `super_admin_activities`
+-- to the new `user_activities` table.
 CREATE TABLE IF NOT EXISTS admin_activities (
     id INT AUTO_INCREMENT PRIMARY KEY,
     admin_id INT,
@@ -102,12 +92,41 @@ CREATE TABLE IF NOT EXISTS admin_activities (
     model VARCHAR(100) NOT NULL,
     value TEXT,
     event_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (admin_id) REFERENCES admin(admin_id)
+    FOREIGN KEY (admin_id) REFERENCES admin(admin_id) ON DELETE SET NULL
+);
+
+-- Deprecated: Super Admin Activities Table
+-- Note: This table is no longer used by the new `log_user_activity` function.
+CREATE TABLE IF NOT EXISTS super_admin_activities (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    superadmin_id INT NOT NULL,
+    superadmin_name VARCHAR(100) NOT NULL,
+    superadmin_ip VARCHAR(45),
+    event_type VARCHAR(50) NOT NULL,
+    model VARCHAR(100) NOT NULL,
+    value TEXT,
+    event_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (superadmin_id) REFERENCES superadmin(superadmin_id) ON DELETE CASCADE
+);
+
+-- New, unified User Activities Table
+CREATE TABLE IF NOT EXISTS user_activities (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    user_name VARCHAR(100) NOT NULL,
+    user_type ENUM('Super Admin', 'Admin', 'Subadmin') NOT NULL,
+    user_ip VARCHAR(45),
+    event_type VARCHAR(50) NOT NULL,
+    model VARCHAR(100) NOT NULL,
+    value TEXT,
+    event_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Insert initial super admin (use a real hashed password in production)
+-- Replace the placeholder hash with a real one for security.
+-- Use `python -c "import bcrypt; print(bcrypt.hashpw(b'your_password_here', bcrypt.gensalt()).decode('utf-8'))"`
 INSERT IGNORE INTO superadmin (superadmin_name, superadmin_email, superadmin_password) 
-VALUES ('Default Super Admin', 'superadmin@example.com', '$2b$12$ExampleHashedPasswordString');
+VALUES ('Default Super Admin', 'superadmin@example.com', '$2b$12$R.vL.x8T7e1M4yF.X.n.w.u5c.rK.y.U.1c.h');
 
 -- Insert default admin role with full permissions
 INSERT IGNORE INTO subadminroles (role_name, permissions) VALUES (
